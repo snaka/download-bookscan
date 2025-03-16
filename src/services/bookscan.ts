@@ -182,11 +182,15 @@ export class BookscanService {
       // 1秒ごとにダウンロードディレクトリをチェック
       intervalId = setInterval(checkDownload, 1000);
 
-      // 30秒でタイムアウト
+      // 60秒でタイムアウト
       timeoutId = setTimeout(() => {
         clearInterval(intervalId);
-        reject(new Error("Download timeout"));
-      }, 30000);
+        reject(
+          new Error(
+            "Download timeout: ファイルのダウンロードに時間がかかっています。ダウンロードは継続中の可能性があります。"
+          )
+        );
+      }, 60000);
 
       // ダウンロードリンクをクリック
       this.page
@@ -246,8 +250,13 @@ export class BookscanService {
         }
       }
 
-      console.error(`Failed to download ${book.title}:`, error);
-      throw error;
+      // タイムアウトエラー以外のエラーの場合のみエラーを表示
+      if (
+        !(error instanceof Error && error.message.includes("Download timeout"))
+      ) {
+        console.error(`Failed to download ${book.title}:`, error);
+        throw error;
+      }
     }
   }
 
