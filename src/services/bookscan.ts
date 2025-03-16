@@ -171,12 +171,18 @@ export class BookscanService {
       let timeoutId: NodeJS.Timeout;
       let intervalId: NodeJS.Timeout;
 
+      // ダウンロード前のファイル一覧を取得
+      const downloadPath = path.join(process.cwd(), "downloads");
+      const beforeFiles = new Set(fs.readdirSync(downloadPath));
+
       const checkDownload = () => {
-        const files = fs.readdirSync(path.join(process.cwd(), "downloads"));
-        const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
-        if (pdfFiles.length > 0) {
+        const currentFiles = fs.readdirSync(downloadPath);
+        // 新しく追加されたファイルを検出
+        const newFiles = currentFiles.filter((file) => !beforeFiles.has(file));
+        if (newFiles.length > 0) {
           clearTimeout(timeoutId);
           clearInterval(intervalId);
+          console.log(`File downloaded: ${newFiles[0]}`);
           resolve();
         }
       };
