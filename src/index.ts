@@ -15,6 +15,7 @@ program
   .description("Download books from your Bookscan bookshelf")
   .option("-n, --number <number>", "Number of books to download", "1")
   .option("-p, --page <page>", "Page number to download from", "1")
+  .option("-a, --all", "Download books from all pages")
   .action(async (options) => {
     const limit = parseInt(options.number, 10);
     const page = parseInt(options.page, 10);
@@ -35,24 +36,62 @@ program
 
       await bookscanService.login();
 
-      const { books, totalCount, hasNextPage } =
-        await bookscanService.getBookList(page);
-      console.log(`Page ${page}: ${totalCount} books found.`);
+      if (options.all) {
+        let currentPage = page;
+        let totalDownloaded = 0;
+        let hasNextPage = true;
 
-      const downloadCount = Math.min(limit, books.length);
-      console.log(`Downloading ${downloadCount} books...`);
-      for (let i = 0; i < downloadCount; i++) {
-        const book = books[i];
-        try {
-          process.stdout.write(`[${i + 1}/${downloadCount}] ${book.title}`);
-          await bookscanService.downloadBook(book);
-          process.stdout.write(" ✓\n");
-        } catch (error) {
-          process.stdout.write(" ✗\n");
-          console.error(`Failed to download: ${book.title}`, error);
+        while (hasNextPage) {
+          const {
+            books,
+            totalCount,
+            hasNextPage: nextPage,
+          } = await bookscanService.getBookList(currentPage);
+          console.log(`Page ${currentPage}: ${totalCount} books found.`);
+
+          console.log(
+            `Downloading ${books.length} books from page ${currentPage}...`
+          );
+          for (let i = 0; i < books.length; i++) {
+            const book = books[i];
+            try {
+              process.stdout.write(`[${totalDownloaded + 1}] ${book.title}`);
+              await bookscanService.downloadBook(book);
+              process.stdout.write(" ✓\n");
+              totalDownloaded++;
+            } catch (error) {
+              process.stdout.write(" ✗\n");
+              console.error(`Failed to download: ${book.title}`, error);
+            }
+          }
+
+          hasNextPage = nextPage || false;
+          if (hasNextPage) {
+            currentPage++;
+          }
         }
+        console.log(
+          `Download completed. Total books downloaded: ${totalDownloaded}`
+        );
+      } else {
+        const { books, totalCount } = await bookscanService.getBookList(page);
+        console.log(`Page ${page}: ${totalCount} books found.`);
+
+        const downloadCount = Math.min(limit, books.length);
+        console.log(`Downloading ${downloadCount} books...`);
+        for (let i = 0; i < downloadCount; i++) {
+          const book = books[i];
+          try {
+            process.stdout.write(`[${i + 1}/${downloadCount}] ${book.title}`);
+            await bookscanService.downloadBook(book);
+            process.stdout.write(" ✓\n");
+          } catch (error) {
+            process.stdout.write(" ✗\n");
+            console.error(`Failed to download: ${book.title}`, error);
+          }
+        }
+        console.log("Download completed.");
       }
-      console.log("Download completed.");
 
       await bookscanService.close();
     } catch (error) {
