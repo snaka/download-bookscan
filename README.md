@@ -1,3 +1,6 @@
+> [!NOTE]
+> ***Most of the code in this repository is by Cline***
+
 # BOOKSCAN PDF Downloader
 
 BOOKSCAN の本棚に登録されている本をPDFとしてダウンロードするCLIツール。
