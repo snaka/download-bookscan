@@ -98,7 +98,7 @@ export class BookscanService {
       console.error("Failed to find book list:", error);
       throw error;
     }
-    const { books, hasNextPage } = await this.page.evaluate(() => {
+    const { books, hasNextPage } = await this.page.evaluate((currentPage) => {
       const bookElements = document.querySelectorAll(".hondana_list01");
       const books = Array.from(bookElements).map((element) => {
         const titleElement = element.querySelector(".hondana_list_contents h3");
@@ -109,11 +109,14 @@ export class BookscanService {
       });
 
       // 次のページがあるかどうかを確認
-      const nextPageLink = document.querySelector(".next a");
-      const hasNextPage = nextPageLink !== null;
+      const pagination = document.querySelector(".pagination");
+      console.log("Pagination HTML:", pagination?.outerHTML);
+      const nextLink = pagination?.querySelector(".next:not(.disabled)");
+      console.log("Next link found:", nextLink !== null);
+      const hasNextPage = nextLink !== null;
 
       return { books, hasNextPage };
-    });
+    }, page);
 
     return {
       books,
