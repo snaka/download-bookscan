@@ -147,26 +147,8 @@ export class BookscanService {
     await this.page.goto(bookUrl);
     console.log("Book detail page loaded");
 
-    // PDFダウンロードリンクを探して取得
+    // PDFダウンロードリンクを探してクリック
     console.log("Searching for PDF download link...");
-    const downloadUrl = await this.page.evaluate(() => {
-      const downloadLink = document.querySelector('a[href*="pdf"]');
-      return downloadLink?.getAttribute("href") || null;
-    });
-
-    if (!downloadUrl) {
-      console.error("PDF download link not found");
-      console.log("Current page HTML:", await this.page.content());
-      throw new Error(`PDF download link not found for book: ${book.title}`);
-    }
-    console.log("Found PDF download link:", downloadUrl);
-
-    // PDFをダウンロード
-    console.log("Starting PDF download...");
-    const fullDownloadUrl = new URL(downloadUrl, BookscanService.BASE_URL).href;
-    console.log("Full download URL:", fullDownloadUrl);
-
-    // ダウンロードを開始
     const downloadPromise = new Promise<void>((resolve, reject) => {
       let timeoutId: NodeJS.Timeout;
       let intervalId: NodeJS.Timeout;
@@ -201,15 +183,17 @@ export class BookscanService {
         reject(new Error("Download timeout"));
       }, 30000);
 
-      // ダウンロードを開始
+      // ダウンロードリンクをクリック
       this.page
-        ?.goto(fullDownloadUrl, { waitUntil: "networkidle0" })
-        .catch((error) => {
-          // ダウンロード中にページが閉じられるエラーは無視
-          if (!error.message.includes("Navigating frame was detached")) {
-            reject(error);
+        ?.evaluate(() => {
+          const downloadLink = document.querySelector('a[href*="pdf"]');
+          if (downloadLink instanceof HTMLElement) {
+            downloadLink.click();
+          } else {
+            throw new Error("Download link not found");
           }
-        });
+        })
+        .catch(reject);
     });
 
     try {
