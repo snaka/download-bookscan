@@ -177,8 +177,13 @@ export class BookscanService {
 
       const checkDownload = () => {
         const currentFiles = fs.readdirSync(downloadPath);
-        // 新しく追加されたファイルを検出
-        const newFiles = currentFiles.filter((file) => !beforeFiles.has(file));
+        // 新しく追加されたPDFファイルを検出（ダウンロード中のファイルは除外）
+        const newFiles = currentFiles.filter(
+          (file) =>
+            !beforeFiles.has(file) &&
+            file.endsWith(".pdf") &&
+            !file.endsWith(".crdownload")
+        );
         if (newFiles.length > 0) {
           clearTimeout(timeoutId);
           clearInterval(intervalId);
