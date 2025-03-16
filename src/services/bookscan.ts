@@ -167,33 +167,47 @@ export class BookscanService {
     console.log("Full download URL:", fullDownloadUrl);
 
     // ダウンロードを開始
-    const downloadPromise = new Promise<void>((resolve) => {
+    const downloadPromise = new Promise<void>((resolve, reject) => {
       let timeoutId: NodeJS.Timeout;
+      let intervalId: NodeJS.Timeout;
 
       const checkDownload = () => {
         const files = fs.readdirSync(path.join(process.cwd(), "downloads"));
         const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
         if (pdfFiles.length > 0) {
           clearTimeout(timeoutId);
+          clearInterval(intervalId);
           resolve();
         }
       };
 
       // 1秒ごとにダウンロードディレクトリをチェック
-      const intervalId = setInterval(checkDownload, 1000);
+      intervalId = setInterval(checkDownload, 1000);
 
       // 30秒でタイムアウト
       timeoutId = setTimeout(() => {
         clearInterval(intervalId);
-        throw new Error("Download timeout");
+        reject(new Error("Download timeout"));
       }, 30000);
 
       // ダウンロードを開始
-      this.page?.goto(fullDownloadUrl);
+      this.page
+        ?.goto(fullDownloadUrl, { waitUntil: "networkidle0" })
+        .catch((error) => {
+          // ダウンロード中にページが閉じられるエラーは無視
+          if (!error.message.includes("Navigating frame was detached")) {
+            reject(error);
+          }
+        });
     });
 
-    await downloadPromise;
-    console.log(`Downloaded: ${book.title}`);
+    try {
+      await downloadPromise;
+      console.log(`Downloaded: ${book.title}`);
+    } catch (error) {
+      console.error(`Failed to download ${book.title}:`, error);
+      throw error;
+    }
   }
 
   public async close(): Promise<void> {
