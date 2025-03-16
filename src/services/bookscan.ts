@@ -42,10 +42,15 @@ export class BookscanService {
     // PDFダウンロードの設定
     console.log("Configuring PDF download settings...");
     const client = await this.page.target().createCDPSession();
-    await client.send("Page.setDownloadBehavior", {
-      behavior: "allow",
-      downloadPath: downloadPath,
-    });
+    await Promise.all([
+      client.send("Page.setDownloadBehavior", {
+        behavior: "allow",
+        downloadPath: downloadPath,
+      }),
+      this.page.setExtraHTTPHeaders({
+        Accept: "application/pdf",
+      }),
+    ]);
     console.log("PDF download settings configured");
   }
 
@@ -186,7 +191,23 @@ export class BookscanService {
       // ダウンロードリンクをクリック
       this.page
         ?.waitForSelector('a[href*="pdf"]')
-        .then((element) => element?.click())
+        .then(async (element) => {
+          if (element) {
+            // リンクの位置を取得
+            const box = await element.boundingBox();
+            if (box) {
+              // リンクの中央をクリック
+              await this.page?.mouse.click(
+                box.x + box.width / 2,
+                box.y + box.height / 2
+              );
+            } else {
+              reject(new Error("Failed to get link position"));
+            }
+          } else {
+            reject(new Error("Download link not found"));
+          }
+        })
         .catch(reject);
     });
 
