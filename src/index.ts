@@ -39,14 +39,20 @@ program
         await bookscanService.getBookList(page);
       console.log(`Page ${page}: ${totalCount} books found.`);
 
-      for (let i = 0; i < Math.min(limit, books.length); i++) {
+      const downloadCount = Math.min(limit, books.length);
+      console.log(`Downloading ${downloadCount} books...`);
+      for (let i = 0; i < downloadCount; i++) {
         const book = books[i];
         try {
+          process.stdout.write(`[${i + 1}/${downloadCount}] ${book.title}`);
           await bookscanService.downloadBook(book);
+          process.stdout.write(" ✓\n");
         } catch (error) {
+          process.stdout.write(" ✗\n");
           console.error(`Failed to download: ${book.title}`, error);
         }
       }
+      console.log("Download completed.");
 
       await bookscanService.close();
     } catch (error) {

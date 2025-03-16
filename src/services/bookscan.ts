@@ -202,9 +202,7 @@ export class BookscanService {
           file.includes(book.title)
       );
 
-      if (downloadedFile) {
-        console.log(`Downloaded: ${downloadedFile}`);
-      } else {
+      if (!downloadedFile) {
         throw new Error("Download failed: File not found");
       }
     } catch (error) {
@@ -219,9 +217,8 @@ export class BookscanService {
             file.includes(book.title)
         );
 
-        if (downloadedFile) {
-          console.log(`Downloaded: ${downloadedFile}`);
-          return;
+        if (!downloadedFile) {
+          throw new Error("Download failed: File not found");
         }
       }
 
