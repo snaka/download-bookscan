@@ -16,6 +16,7 @@ program
   .option("-n, --number <number>", "Number of books to download", "1")
   .option("-p, --page <page>", "Page number to download from", "1")
   .option("-a, --all", "Download books from all pages")
+  .option("-f, --filter <keyword>", "Filter books by title")
   .action(async (options) => {
     const limit = parseInt(options.number, 10);
     const page = parseInt(options.page, 10);
@@ -49,19 +50,26 @@ program
           } = await bookscanService.getBookList(currentPage);
           console.log(`Page ${currentPage}: ${totalCount} books found.`);
 
-          console.log(
-            `Downloading ${books.length} books from page ${currentPage}...`
-          );
-          for (let i = 0; i < books.length; i++) {
-            const book = books[i];
-            try {
-              process.stdout.write(`[${totalDownloaded + 1}] ${book.title}`);
-              await bookscanService.downloadBook(book);
-              process.stdout.write(" ✓\n");
-              totalDownloaded++;
-            } catch (error) {
-              process.stdout.write(" ✗\n");
-              console.error(`Failed to download: ${book.title}`, error);
+          // タイトルでフィルタリング
+          const filteredBooks = options.filter
+            ? books.filter((book) => book.title.includes(options.filter))
+            : books;
+
+          if (filteredBooks.length > 0) {
+            console.log(
+              `Downloading ${filteredBooks.length} matching books from page ${currentPage}...`
+            );
+            for (let i = 0; i < filteredBooks.length; i++) {
+              const book = filteredBooks[i];
+              try {
+                process.stdout.write(`[${totalDownloaded + 1}] ${book.title}`);
+                await bookscanService.downloadBook(book);
+                process.stdout.write(" ✓\n");
+                totalDownloaded++;
+              } catch (error) {
+                process.stdout.write(" ✗\n");
+                console.error(`Failed to download: ${book.title}`, error);
+              }
             }
           }
 
@@ -77,17 +85,28 @@ program
         const { books, totalCount } = await bookscanService.getBookList(page);
         console.log(`Page ${page}: ${totalCount} books found.`);
 
-        const downloadCount = Math.min(limit, books.length);
-        console.log(`Downloading ${downloadCount} books...`);
-        for (let i = 0; i < downloadCount; i++) {
-          const book = books[i];
-          try {
-            process.stdout.write(`[${i + 1}/${downloadCount}] ${book.title}`);
-            await bookscanService.downloadBook(book);
-            process.stdout.write(" ✓\n");
-          } catch (error) {
-            process.stdout.write(" ✗\n");
-            console.error(`Failed to download: ${book.title}`, error);
+        // タイトルでフィルタリング
+        const filteredBooks = options.filter
+          ? books.filter((book) => book.title.includes(options.filter))
+          : books;
+
+        const downloadCount = Math.min(limit, filteredBooks.length);
+        if (downloadCount > 0) {
+          console.log(
+            options.filter
+              ? `Downloading ${downloadCount} matching books...`
+              : `Downloading ${downloadCount} books...`
+          );
+          for (let i = 0; i < downloadCount; i++) {
+            const book = filteredBooks[i];
+            try {
+              process.stdout.write(`[${i + 1}/${downloadCount}] ${book.title}`);
+              await bookscanService.downloadBook(book);
+              process.stdout.write(" ✓\n");
+            } catch (error) {
+              process.stdout.write(" ✗\n");
+              console.error(`Failed to download: ${book.title}`, error);
+            }
           }
         }
         console.log("Download completed.");
