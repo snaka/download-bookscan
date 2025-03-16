@@ -99,7 +99,9 @@ export class BookscanService {
       throw error;
     }
     const { books, hasNextPage } = await this.page.evaluate((currentPage) => {
-      const bookElements = document.querySelectorAll(".hondana_list01");
+      const bookElements = document.querySelectorAll(
+        "#hondana_list .hondana_list01"
+      );
       const books = Array.from(bookElements).map((element) => {
         const titleElement = element.querySelector(".hondana_list_contents h3");
         const linkElement = element.querySelector(".fancybox");
@@ -108,11 +110,14 @@ export class BookscanService {
         return { title, url };
       });
 
+      // 本の一覧が空の場合、または30件未満の場合は次のページなし
+      if (books.length === 0 || books.length < 30) {
+        return { books, hasNextPage: false };
+      }
+
       // 次のページがあるかどうかを確認
       const pagination = document.querySelector(".pagination");
-      console.log("Pagination HTML:", pagination?.outerHTML);
       const nextLink = pagination?.querySelector(".next:not(.disabled)");
-      console.log("Next link found:", nextLink !== null);
       const hasNextPage = nextLink !== null;
 
       return { books, hasNextPage };
