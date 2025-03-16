@@ -165,7 +165,34 @@ export class BookscanService {
     console.log("Starting PDF download...");
     const fullDownloadUrl = new URL(downloadUrl, BookscanService.BASE_URL).href;
     console.log("Full download URL:", fullDownloadUrl);
-    await this.page.goto(fullDownloadUrl);
+
+    // ダウンロードを開始
+    const downloadPromise = new Promise<void>((resolve) => {
+      let timeoutId: NodeJS.Timeout;
+
+      const checkDownload = () => {
+        const files = fs.readdirSync(path.join(process.cwd(), "downloads"));
+        const pdfFiles = files.filter((file) => file.endsWith(".pdf"));
+        if (pdfFiles.length > 0) {
+          clearTimeout(timeoutId);
+          resolve();
+        }
+      };
+
+      // 1秒ごとにダウンロードディレクトリをチェック
+      const intervalId = setInterval(checkDownload, 1000);
+
+      // 30秒でタイムアウト
+      timeoutId = setTimeout(() => {
+        clearInterval(intervalId);
+        throw new Error("Download timeout");
+      }, 30000);
+
+      // ダウンロードを開始
+      this.page?.goto(fullDownloadUrl);
+    });
+
+    await downloadPromise;
     console.log(`Downloaded: ${book.title}`);
   }
 
