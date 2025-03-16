@@ -62,7 +62,9 @@ export class BookscanService {
 
     console.log("Waiting for login form elements...");
     try {
-      await this.page.waitForSelector('input[name="mail"]', { timeout: 30000 });
+      await this.page.waitForSelector('input[name="email"]', {
+        timeout: 30000,
+      });
       console.log("Email input found");
       await this.page.waitForSelector('input[name="password"]', {
         timeout: 30000,
@@ -75,14 +77,14 @@ export class BookscanService {
     }
 
     console.log("Entering credentials...");
-    await this.page.type('input[name="mail"]', credentials.userId);
+    await this.page.type('input[name="email"]', credentials.userId);
     await this.page.type('input[name="password"]', credentials.password);
     console.log("Credentials entered");
 
     console.log("Submitting login form...");
     await Promise.all([
       this.page.waitForNavigation({ timeout: 60000 }),
-      this.page.click('input[type="submit"]'),
+      this.page.click("#login-btn"),
     ]);
     console.log("Form submitted");
 
