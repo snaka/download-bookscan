@@ -185,14 +185,8 @@ export class BookscanService {
 
       // ダウンロードリンクをクリック
       this.page
-        ?.evaluate(() => {
-          const downloadLink = document.querySelector('a[href*="pdf"]');
-          if (downloadLink instanceof HTMLElement) {
-            downloadLink.click();
-          } else {
-            throw new Error("Download link not found");
-          }
-        })
+        ?.waitForSelector('a[href*="pdf"]')
+        .then((element) => element?.click())
         .catch(reject);
     });
 
