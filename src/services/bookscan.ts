@@ -213,8 +213,39 @@ export class BookscanService {
 
     try {
       await downloadPromise;
-      console.log(`Downloaded: ${book.title}`);
+      // ダウンロードの成功を確認
+      const downloadPath = path.join(process.cwd(), "downloads");
+      const files = fs.readdirSync(downloadPath);
+      const downloadedFile = files.find(
+        (file) =>
+          file.endsWith(".pdf") &&
+          !file.endsWith(".crdownload") &&
+          file.includes(book.title)
+      );
+
+      if (downloadedFile) {
+        console.log(`Downloaded: ${downloadedFile}`);
+      } else {
+        throw new Error("Download failed: File not found");
+      }
     } catch (error) {
+      // タイムアウトエラーでもファイルが存在する場合は成功とみなす
+      if (error instanceof Error && error.message === "Download timeout") {
+        const downloadPath = path.join(process.cwd(), "downloads");
+        const files = fs.readdirSync(downloadPath);
+        const downloadedFile = files.find(
+          (file) =>
+            file.endsWith(".pdf") &&
+            !file.endsWith(".crdownload") &&
+            file.includes(book.title)
+        );
+
+        if (downloadedFile) {
+          console.log(`Downloaded: ${downloadedFile}`);
+          return;
+        }
+      }
+
       console.error(`Failed to download ${book.title}:`, error);
       throw error;
     }
