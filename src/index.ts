@@ -12,8 +12,14 @@ program
 
 program
   .command("download")
-  .description("Download all books from your Bookscan bookshelf")
-  .action(async () => {
+  .description("Download books from your Bookscan bookshelf")
+  .option("-n, --number <number>", "Number of books to download", "1")
+  .action(async (options) => {
+    const limit = parseInt(options.number, 10);
+    if (isNaN(limit) || limit < 1) {
+      console.error("Error: Number of books must be a positive integer");
+      process.exit(1);
+    }
     try {
       const authService = AuthService.getInstance();
       authService.validateCredentials();
@@ -28,12 +34,14 @@ program
       const { books, totalCount } = await bookscanService.getBookList();
       console.log(`Found ${totalCount} books in your bookshelf.`);
 
-      for (const book of books) {
+      console.log(`Downloading ${limit} books...`);
+      for (let i = 0; i < Math.min(limit, books.length); i++) {
         try {
-          console.log(`Downloading: ${book.title}`);
+          const book = books[i];
+          console.log(`Downloading (${i + 1}/${limit}): ${book.title}`);
           await bookscanService.downloadBook(book);
         } catch (error) {
-          console.error(`Failed to download ${book.title}:`, error);
+          console.error(`Failed to download book (${i + 1}/${limit}):`, error);
         }
       }
 

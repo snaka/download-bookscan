@@ -11,6 +11,7 @@ export class BookscanService {
     "https://system.bookscan.co.jp/mypage/login.php";
   private static readonly BOOKSHELF_URL =
     "https://system.bookscan.co.jp/mypage/bookshelf_all_list.php?q=&sort=s";
+  private static readonly BASE_URL = "https://system.bookscan.co.jp";
 
   constructor(private authService: AuthService) {}
 
@@ -162,7 +163,9 @@ export class BookscanService {
 
     // PDFをダウンロード
     console.log("Starting PDF download...");
-    await this.page.goto(downloadUrl);
+    const fullDownloadUrl = new URL(downloadUrl, BookscanService.BASE_URL).href;
+    console.log("Full download URL:", fullDownloadUrl);
+    await this.page.goto(fullDownloadUrl);
     console.log(`Downloaded: ${book.title}`);
   }
 
