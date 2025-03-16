@@ -7,6 +7,8 @@ export interface Book {
 export interface BookshelfResponse {
   books: Book[];
   totalCount: number;
+  hasNextPage?: boolean;
+  currentPage?: number;
 }
 
 export interface AuthConfig {
