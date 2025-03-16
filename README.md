@@ -18,7 +18,7 @@ Bookscanの本棚に登録されている本をPDFとしてダウンロードす
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/yourusername/download-bookscan.git
+git clone https://github.com/snaka/download-bookscan.git
 cd download-bookscan
 
 # 依存パッケージのインストール
@@ -28,7 +28,7 @@ npm install
 npm run build
 
 # グローバルインストール（オプション）
-npm install -g .
+npm install -g download-bookscan
 ```
 
 ## 環境変数の設定
@@ -54,11 +54,18 @@ download-bookscan download
 ローカルで実行する場合:
 ```bash
 # 開発モード
-npm run dev
+npm run dev download
 
 # ビルド済みバージョン
-npm start
+npm start download
 ```
+
+## オプション
+
+- `-n, --number <number>`: ダウンロードする本の数を指定します (デフォルト: 1)
+- `-p, --page <page>`: ダウンロードを開始するページ番号を指定します (デフォルト: 1)
+- `-a, --all`: すべてのページから本をダウンロードします
+- `-f, --filter <keyword>`: タイトルにキーワードが含まれる本をフィルタリングします
 
 ## ダウンロードファイル
 
@@ -77,4 +84,4 @@ ISC
 
 ## 作者
 
-Your Name
+snaka
