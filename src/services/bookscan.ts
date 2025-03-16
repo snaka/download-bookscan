@@ -108,7 +108,7 @@ export class BookscanService {
 
     console.log("Waiting for book list...");
     try {
-      await this.page.waitForSelector(".book-list", { timeout: 30000 });
+      await this.page.waitForSelector("#hondana_list", { timeout: 30000 });
       console.log("Book list found");
     } catch (error) {
       console.error("Failed to find book list:", error);
@@ -118,11 +118,12 @@ export class BookscanService {
 
     console.log("Extracting book information...");
     const books = await this.page.evaluate(() => {
-      const bookElements = document.querySelectorAll(".book-list .book-item");
+      const bookElements = document.querySelectorAll(".hondana_list01");
       return Array.from(bookElements).map((element) => {
-        const titleElement = element.querySelector(".book-title a");
+        const titleElement = element.querySelector(".hondana_list_contents h3");
+        const linkElement = element.querySelector(".fancybox");
         const title = titleElement?.textContent?.trim() || "";
-        const url = titleElement?.getAttribute("href") || "";
+        const url = linkElement?.getAttribute("href") || "";
         return { title, url };
       });
     });
