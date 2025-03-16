@@ -80,7 +80,7 @@ npm start download
 
 ## ライセンス
 
-ISC
+[MIT](LICENSE.txt)
 
 ## 作者
 
